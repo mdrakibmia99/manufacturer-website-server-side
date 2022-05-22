@@ -38,6 +38,7 @@ async function run() {
         await client.connect();
         const carouselCollection=client.db('manufacturerWebsite').collection('carousel');
         const userCollection= client.db("manufacturerWebsite").collection("users");
+        const productsCollection= client.db("manufacturerWebsite").collection("products");
         
         app.post('/user',async(req,res)=>{
             const user =req.body
@@ -49,6 +50,12 @@ async function run() {
         app.get('/carousels', async (req, res) => {
             const carousels = await carouselCollection.find({}).toArray();
             res.send(carousels);
+        })
+
+        //this api for get all products 
+        app.get("/products",async(req,res)=>{
+          const products= await productsCollection.find({}).toArray();
+          res.send(products);
         })
 
      } finally {
