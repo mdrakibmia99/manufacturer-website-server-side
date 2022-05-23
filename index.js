@@ -53,11 +53,11 @@ async function run() {
             res.send(carousels);
         })
 
-        //this api for get all products 
-        app.get("/products",async(req,res)=>{
-          const products= await productsCollection.find({}).toArray();
-          res.send(products);
-        })
+        // //this api for get all products 
+        // app.get("/products",async(req,res)=>{
+        //   const products= await productsCollection.find({}).toArray();
+        //   res.send(products);
+        // })
 
         // this api for get a single product 
         app.get("/product/:id",async(req,res)=>{
@@ -72,6 +72,28 @@ async function run() {
           const result =await userOrdersCollection.insertOne(orderData);
           res.send(result);
         })
+
+       //    get all  products api 
+       app.get('/products', async (req, res) => {
+        const page = parseInt(req.query.page)
+        const PageSize = parseInt(req.query.size)
+        const cursor = productsCollection.find({});
+        let products;
+        if (page || PageSize) {
+
+            products = await cursor.skip(page * PageSize).limit(PageSize).toArray();
+        } else {
+
+            products = await cursor.toArray();
+        }
+        res.send(products)
+
+    })
+        //   this api for count total product
+        app.get('/productCount', async (req, res) => {
+          const count = await productsCollection.estimatedDocumentCount();
+          res.send({ count });
+      })
 
      } finally {
         // await client.close()
