@@ -94,6 +94,12 @@ async function run() {
           const count = await productsCollection.estimatedDocumentCount();
           res.send({ count });
       })
+      
+    //  this api for display show order list 
+        app.get('/userOrders', async (req, res) => {
+            const userOrders = await userOrdersCollection.find({}).toArray();
+            res.send(userOrders);
+        })
 
      } finally {
         // await client.close()
