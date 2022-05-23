@@ -1,4 +1,4 @@
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const jwt = require('jsonwebtoken');
 const express = require('express');
 const app=express();
@@ -39,6 +39,7 @@ async function run() {
         const carouselCollection=client.db('manufacturerWebsite').collection('carousel');
         const userCollection= client.db("manufacturerWebsite").collection("users");
         const productsCollection= client.db("manufacturerWebsite").collection("products");
+        const userOrdersCollection=client.db("manufacturerWebsite").collection("userOrders");
         
         app.post('/user',async(req,res)=>{
             const user =req.body
@@ -56,6 +57,20 @@ async function run() {
         app.get("/products",async(req,res)=>{
           const products= await productsCollection.find({}).toArray();
           res.send(products);
+        })
+
+        // this api for get a single product 
+        app.get("/product/:id",async(req,res)=>{
+          const id=req.params.id;
+          const query = { _id: ObjectId(id) };
+          const product=await productsCollection.find(query).toArray();
+          res.send(product);
+        })
+    //  this api for post a user order 
+        app.post('/userOrder',async(req,res)=>{
+          const orderData =req.body;
+          const result =await userOrdersCollection.insertOne(orderData);
+          res.send(result);
         })
 
      } finally {
