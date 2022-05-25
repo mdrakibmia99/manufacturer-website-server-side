@@ -215,7 +215,15 @@ async function run() {
             res.send(result);
         })
 
+         
 
+        
+        //  this api for post product
+        app.post('/product',async(req,res)=>{
+            const product =req.body;
+            const result =await productsCollection.insertOne(product);
+            res.send(result);
+          })
 
      } finally {
         // await client.close()
