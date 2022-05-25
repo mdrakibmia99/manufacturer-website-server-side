@@ -235,6 +235,13 @@ async function run() {
             res.send(result);
           })
 
+        //   / display all products
+        app.get('/allProducts', async (req, res) => {
+            const products = await productsCollection.find({}).toArray();
+            res.send(products);
+        })
+
+
      } finally {
         // await client.close()
     }
