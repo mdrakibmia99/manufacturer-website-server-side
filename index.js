@@ -50,6 +50,23 @@ async function run() {
             const result=await userCollection.insertOne(user);
             res.send(result);
         })
+    
+        // this api for add google user   
+      app.post("/googleUser",async(req,res)=>{
+          const postUser=req.body;
+          const query={email:postUser.email}
+          const result =await userCollection.findOne(query);
+          console.log("reault",result);
+          if(result){
+              console.log("user pawa gese")
+           return res.send({message:false})
+          }else{
+            const userPost=await userCollection.insertOne(postUser);
+           return res.send({message:true,userPost})
+
+          }
+      })
+
       
         // this api for get carousel photos  
         app.get('/carousels', async (req, res) => {
@@ -57,11 +74,7 @@ async function run() {
             res.send(carousels);
         })
 
-        // //this api for get all products 
-        // app.get("/products",async(req,res)=>{
-        //   const products= await productsCollection.find({}).toArray();
-        //   res.send(products);
-        // })
+     
 
         // this api for get a single product 
         app.get("/product/:id",async(req,res)=>{
@@ -171,6 +184,37 @@ async function run() {
             clientSecret: paymentIntent.client_secret,
         });
     })
+    // / find user admin
+        app.get('/user/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email: email };
+            const admin = await userCollection.findOne(query);
+            res.send(admin);
+        })
+
+        // add an user to an admin
+        app.put('/user/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) };
+            const updateDoc = {
+                $set: {
+                    role: "admin"
+                }
+            };
+            const options = { upsert: true };
+            const admin = await userCollection.updateOne(filter, updateDoc, options);
+            res.send(admin);
+        })
+
+
+        // delete a user order
+        app.delete('/userOrder/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) };
+            const result = await userOrdersCollection.deleteOne(filter);
+            res.send(result);
+        })
+
 
 
      } finally {
