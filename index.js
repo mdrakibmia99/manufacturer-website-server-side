@@ -5,6 +5,7 @@ const app=express();
 const cors = require('cors');
 require('dotenv').config()
 const port =process.env.PORT || 5000;
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 
 // middle ware 
@@ -40,6 +41,9 @@ async function run() {
         const userCollection= client.db("manufacturerWebsite").collection("users");
         const productsCollection= client.db("manufacturerWebsite").collection("products");
         const userOrdersCollection=client.db("manufacturerWebsite").collection("userOrders");
+        const userReviewsCollection=client.db("manufacturerWebsite").collection("userReviews");
+        const paymentCollection = client.db('manufacturerWebsite').collection('payments');
+
         
         app.post('/user',async(req,res)=>{
             const user =req.body
@@ -100,6 +104,74 @@ async function run() {
             const userOrders = await userOrdersCollection.find({}).toArray();
             res.send(userOrders);
         })
+
+        // this api for get review info 
+        app.get('/reviews',async(req,res)=>{
+           const reviews=await userReviewsCollection.find({}).toArray();
+           res.send(reviews);
+        })
+
+        // add user review
+        app.put('/reviews/:email', async (req, res) => {
+          const reviewerEmail = req.params.email;
+          const userReview = req.body;
+
+          const filter = { reviewerEmail: reviewerEmail };
+          const options = { upsert: true };
+          const updateDoc = {
+              $set: userReview
+          };
+          const usersReview = await userReviewsCollection.updateOne(filter, updateDoc, options);
+          res.send(usersReview);
+      })
+    
+       
+
+      // display specific ordered product through id
+      app.get('/userOrder/:id', async (req, res) => {
+        const id = req.params.id;
+        const query = { _id: ObjectId(id) };
+        const userOrder = await userOrdersCollection.findOne(query);
+        res.send(userOrder);
+    })
+
+    // add user order with payment method
+    app.patch('/userOrder/:id', async (req, res) => {
+        const id = req.params.id;
+        const payment = req.body;
+     
+        const filter = { _id: ObjectId(id) };
+        const updateDoc = {
+            $set: {
+                paid: true,
+                transactionId: payment?.transactionId
+            }
+        };
+
+        const result = await paymentCollection.insertOne(payment);
+        const updateUserOrder = await userOrdersCollection.updateOne(filter, updateDoc);
+        res.send(updateDoc);
+    })
+
+    // make a payment through create payment intent
+    app.post('/create-payment-intent', async (req, res) => {
+        const userOrder = req.body;
+        const totalPrice = userOrder?.totalPrice;
+        const amount = totalPrice * 100;
+
+        const paymentIntent = await stripe.paymentIntents.create({
+            amount: amount,
+            currency: "usd",
+            payment_method_types: [
+                "card"
+            ],
+        });
+
+        res.send({
+            clientSecret: paymentIntent.client_secret,
+        });
+    })
+
 
      } finally {
         // await client.close()
