@@ -113,10 +113,20 @@ async function run() {
       })
       
     //  this api for display show order list 
+        // display ordered product
         app.get('/userOrders', async (req, res) => {
-            const userOrders = await userOrdersCollection.find({}).toArray();
+            const email = req.query.email;
+            console.log(email)
+            let userOrders;
+            if (email) {
+                const query = { email: email };
+                userOrders = await userOrdersCollection.find(query).toArray();
+            } else {
+                userOrders = await userOrdersCollection.find({}).toArray();
+            }
             res.send(userOrders);
         })
+
 
         // this api for get review info 
         app.get('/reviews',async(req,res)=>{
