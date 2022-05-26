@@ -54,6 +54,9 @@ async function run() {
         const userOrdersCollection = client.db("manufacturerWebsite").collection("userOrders");
         const userReviewsCollection = client.db("manufacturerWebsite").collection("userReviews");
         const paymentCollection = client.db('manufacturerWebsite').collection('payments');
+        const blogsCollection = client.db('manufacturerWebsite').collection('blogs');
+        const myProfileCollection = client.db('manufacturerWebsite').collection('myProfile');
+
 
 
         app.post('/user', async (req, res) => {
@@ -328,6 +331,25 @@ async function run() {
             res.send(result);
         })
         
+        // access all blogs
+        app.get('/blogs', async (req, res) => {
+            const blogs = await blogsCollection.find({}).toArray();
+            res.send(blogs);
+        })
+        // my profile
+        app.post('/myProfile', async (req, res) => {
+            const profileInfo = req.body;
+            const myProfile = await myProfileCollection.insertOne(profileInfo);
+            res.send(myProfile);
+        })
+
+        // get user as profiler
+        app.get('/myProfile/:email', async (req, res) => {
+            const email = req.params.email;
+            const filter = { email: email };
+            const myProfile = await myProfileCollection.findOne(filter);
+            res.send(myProfile);
+        })
 
 
 
