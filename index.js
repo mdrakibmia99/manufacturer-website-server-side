@@ -107,12 +107,11 @@ async function run() {
         //    get all  products api 
         app.get('/products', async (req, res) => {
             const page = parseInt(req.query.page)
-            const PageSize = parseInt(req.query.size)
             const cursor = productsCollection.find({});
             let products;
-            if (page || PageSize) {
+            if (page || 3) {
 
-                products = await cursor.skip(page * PageSize).limit(PageSize).toArray();
+                products = await cursor.skip(page * 3).limit(3).toArray();
             } else {
 
                 products = await cursor.toArray();
