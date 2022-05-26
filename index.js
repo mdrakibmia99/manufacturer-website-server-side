@@ -7,7 +7,6 @@ require('dotenv').config()
 const port = process.env.PORT || 5000;
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
-
 // middle ware 
 app.use(cors());
 app.use(express.json());
@@ -29,6 +28,18 @@ function verifyJWT(req, res, next) {
         next();
 
     });
+}
+
+// verify admin api 
+const verifyAdmin = async (req, res, next) => {
+    const requester = req.decoded.email;
+    const requesterAccount = await userCollection.findOne({ email: requester });
+    if (requesterAccount.role === 'admin') {
+        next();
+    }
+    else {
+        res.status(403).send({ message: 'forbidden' });
+    }
 }
 
 
@@ -116,7 +127,6 @@ async function run() {
         // display ordered product
         app.get('/userOrders', async (req, res) => {
             const email = req.query.email;
-            console.log(email)
             let userOrders;
             if (email) {
                 const query = { email: email };
@@ -173,6 +183,7 @@ async function run() {
 
             const result = await paymentCollection.insertOne(payment);
             const updateUserOrder = await userOrdersCollection.updateOne(filter, updateDoc);
+
             res.send(updateDoc);
         })
 
@@ -252,7 +263,7 @@ async function run() {
             const users = await userCollection.find({}).toArray();
             res.send(users);
         })
-           
+
         // add an user to an admin
         app.put('/user/:id', async (req, res) => {
             const id = req.params.id;
@@ -266,6 +277,41 @@ async function run() {
             const admin = await userCollection.updateOne(filter, updateDoc, options);
             res.send(admin);
         })
+        // jwt token 
+
+        app.put("/userAdd/:email", async (req, res) => {
+            const email = req.params.email;
+            const user = req.body;
+            const filter = { email: email };
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: user,
+            };
+            const result = await userCollection.updateOne(filter, updateDoc, options);
+            console.log(result, process.env.ACCESS_TOKEN)
+            const token = jwt.sign({ email: email }, process.env.ACCESS_TOKEN, { expiresIn: '1h' })
+            res.send({ result, token })
+
+
+        });
+        // update availability through admin
+        app.put('/userOrder/:id', async (req, res) => {
+            const id = req.params.id;
+            const qty = req.body;
+            console.log(qty);
+            const filter = { _id: ObjectId(id) };
+            const updateDoc = {
+                $set: {
+                    approval: true,
+                    toolAvailableQuantity: parseInt(qty?.toolAvailableQuantity)
+                }
+            };
+            const options = { upsert: true };
+            
+            const result = await userOrdersCollection.updateOne(filter, updateDoc, options);
+            res.send(result);
+        })
+
 
 
 
