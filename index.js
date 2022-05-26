@@ -296,10 +296,10 @@ async function run() {
         });
         // update availability through admin
         app.put('/userOrder/:id', async (req, res) => {
-            const id = req.params.id;
             const qty = req.body;
-            console.log(qty);
+            const id = req.params.id;
             const filter = { _id: ObjectId(id) };
+            console.log("filter id",filter)
             const updateDoc = {
                 $set: {
                     approval: true,
@@ -311,6 +311,23 @@ async function run() {
             const result = await userOrdersCollection.updateOne(filter, updateDoc, options);
             res.send(result);
         })
+        app.put('/userOrderProduct/:id', async (req, res) => {
+            const id = req.params.id;
+            const qty = req.body;
+            console.log(qty);
+            const filter = { _id: ObjectId(id) };
+            console.log("filter id",filter)
+            const updateDoc = {
+                $set: {
+                    toolAvailableQuantity: parseInt(qty?.toolAvailableQuantity)
+                }
+            };
+            const options = { upsert: true };
+            
+            const result = await productsCollection.updateOne(filter, updateDoc, options);
+            res.send(result);
+        })
+        
 
 
 
